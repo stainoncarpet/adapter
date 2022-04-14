@@ -27,10 +27,12 @@ contract Adapter {
         if(pairAddress != address(0)) {
             pairs[addr0][addr1] = pairAddress;
             pairs[addr1][addr0] = pairAddress;
+        } else {
+            revert("Adapter: Failed to create pair");
         }
     }
 
-    /// @notice adds liquidiy by calling Uniswap contract https://docs.uniswap.org/protocol/V2/reference/smart-contracts/router-02#addliquidity
+    /// @notice adds liquidity by calling Uniswap contract https://docs.uniswap.org/protocol/V2/reference/smart-contracts/router-02#addliquidity
     /// @dev router contract always sends to msg.sender with hardcoded deadline
     /// @param token0 - a pool token
     /// @param token1 - a pool token
@@ -38,7 +40,7 @@ contract Adapter {
     /// @param amount1D amount of tokenB to add as liquidity if the A/B price is <= amountADesired/amountBDesired (B depreciates)
     /// @param amount0M bounds the extent to which the B/A price can go up before the transaction reverts. Must be <= amountADesired
     /// @param amount1M bounds the extent to which the A/B price can go up before the transaction reverts. Must be <= amountBDesired
-    function addLiquidity(address token0, address token1, uint amount0D, uint amount1D, uint amount0M, uint amount1M) external returns(uint) {
+    function addLiquidity(address token0, address token1, uint amount0D, uint amount1D, uint amount0M, uint amount1M) external {
         // (bool success0,) = token0.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), amount0D));
         // (bool success1,) = token1.call(abi.encodeWithSignature("transferFrom(address,address,uint256)", msg.sender, address(this), amount1D));
         // token0.call(abi.encodeWithSignature("approve(address,uint256)", ROUTER, amount0D));
@@ -52,23 +54,36 @@ contract Adapter {
 
         require(success, "Adapter: Failed to add liquidity");
     }
+
+    /// @notice adds liquidity by calling Uniswap contract https://docs.uniswap.org/protocol/V2/reference/smart-contracts/router-02#addliquidityeth
+    /// @dev router contract always sends to msg.sender with hardcoded deadline
+    /// @param token - a pool token
+    /// @param amountD amount of token to add as liquidity if the WETH/token price is <= msg.value/amountTokenDesired (token depreciates).
+    /// @param amountM bounds the extent to which the WETH/token price can go up before the transaction reverts. Must be <= amountTokenDesired.
+    /// @param amountEM bounds the extent to which the token/WETH price can go up before the transaction reverts. Must be <= msg.value.
+    function addLiquidityETH(address token, uint amountD, uint amountM, uint amountEM) external payable {
+        require(msg.value > 0, "Adapter: zero ETH value");
+        
+        (bool success,) = ROUTER.delegatecall(abi.encodeWithSignature(
+            "addLiquidityETH(address,uint256,uint256,uint256,address,uint256)", 
+            token, amountD, amountM, amountEM, msg.sender, block.timestamp + 60)
+        );
+        
+        require(success, "Adapter: Failed to add liquidity");
+    }
+
+
+
+    function removeLiquidity(address token0, address token1, uint liquidity, uint amount0M, uint amount1M) external {
+        (bool success, bytes memory data) = ROUTER.delegatecall(abi.encodeWithSignature(
+            "removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)", 
+            token0, token1, liquidity, amount0M, amount1M, msg.sender, block.timestamp + 90000)
+        );
+        
+        require(success, "Adapter: Failed to remove liquidity");
+    }
+
 /*
-    /// @notice adds liquidiy by calling Uniswap contract https://docs.uniswap.org/protocol/V2/reference/smart-contracts/router-02#addliquidityeth
-    /// @dev 
-    /// @param
-    /// @return
-    function addLiquidityETH() external payable {
-        //IUniswapV2Router02(ROUTER).addLiquidityETH();
-    }
-
-    /// @notice
-    /// @dev
-    /// @param
-    /// @return
-    function removeLiquidiy() external {
-
-    }
-
     /// @notice
     /// @dev
     /// @param

@@ -31,6 +31,7 @@ declare global {
 
 export const FACTORY_ADDRESS = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 export const ROUTER_ADDRESS = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+export const WETH_ADDRESS = "0xc778417e063141139fce010982780140aa0cd5ab";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.12",
