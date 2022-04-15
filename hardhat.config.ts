@@ -45,7 +45,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: process.env.RINKEBY_URL,
-        blockNumber: 10503731,
+        blockNumber: 10503735,
       }
     }
   },
